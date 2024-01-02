@@ -13,11 +13,16 @@ const signUp = async (req, res, next) => {
   const uniqueId = uuidv4();
   const sql = "INSERT INTO users (_id, email, password) VALUES (?, ?, ?)";
 
-  // 서버 접속 시도
   try {
-    // sql 구문 검사
+    // 서버 접속 시도
+    const connection = conn();
     try {
-      const results = await conn().query(sql, [uniqueId, email, cryptedPwd]);
+      // sql 구문 검사
+      const results = await connection.query(sql, [
+        uniqueId,
+        email,
+        cryptedPwd,
+      ]);
       return res.status(StatusCodes.CREATED).json(results);
       // sql 구문 에러 오류
     } catch (error) {
@@ -32,9 +37,9 @@ const signUp = async (req, res, next) => {
       status: StatusCodes.INTERNAL_SERVER_ERROR,
       message: error.message,
     });
-    // 메모리에 저장된 접속 객체를 끊어줘야함
+    // 연결을 풀에 반환
   } finally {
-    return conn().releaseConnection();
+    return releaseConnection(connection);
   }
 };
 
@@ -42,11 +47,12 @@ const login = async (req, res, next) => {
   const { email, password } = req.body;
   const sql = "SELECT * FROM users WHERE email = ?";
 
-  // 서버 접속 시도
   try {
-    // sql 구문 검사
+    // 서버 접속 시도
+    const connection = conn();
     try {
-      const [[results]] = await conn().query(sql, [email]);
+      // sql 구문 검사
+      const [[results]] = await connection.query(sql, [email]);
 
       //   유저 정보가 없을 때
       if (!results) {
@@ -114,8 +120,8 @@ const login = async (req, res, next) => {
       message: error.message,
     });
   } finally {
-    // 메모리에 저장된 접속 객체를 끊어줘야함
-    return conn().releaseConnection();
+    // 연결을 풀에 반환
+    return releaseConnection(connection);
   }
 };
 
