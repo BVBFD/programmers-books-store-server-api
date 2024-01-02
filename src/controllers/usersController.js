@@ -63,9 +63,8 @@ const login = async (req, res, next) => {
           message: "Not Found User",
         });
       } else {
-        // 유저 비밀번호 검사
+        // 유저 비밀번호 검사, 비밀번호 복호화
         const foundUser = results;
-        // 비밀번호 복호화
         const decryptedPwd = CryptoJS.AES.decrypt(
           `${foundUser.password}`,
           `${process.env.CryptoJS_Secret_Key}`
@@ -128,7 +127,7 @@ const login = async (req, res, next) => {
 };
 
 const passwordResetRequest = async (req, res, next) => {
-  const { email } = req.body;
+  const { email: emailBody } = req.body;
   const sql = "SELECT * FROM users WHERE email = ?";
   // 서버 접속 시도
   let connection;
@@ -138,7 +137,8 @@ const passwordResetRequest = async (req, res, next) => {
     connection = conn();
     try {
       // sql 구문 검사
-      const [[results]] = await connection.query(sql, [email]);
+      const [[results]] = await connection.query(sql, [emailBody]);
+      const { _id, email, created_at, updated_at } = results;
       //   유저 정보가 없을 때
       if (!results) {
         return next({
@@ -146,7 +146,9 @@ const passwordResetRequest = async (req, res, next) => {
           message: "Not Found User",
         });
       } else {
-        return res.status(StatusCodes.OK).json(results);
+        return res
+          .status(StatusCodes.OK)
+          .json({ _id, email, created_at, updated_at });
       }
       // sql 구문 에러 오류
     } catch (error) {
@@ -167,8 +169,47 @@ const passwordResetRequest = async (req, res, next) => {
   }
 };
 
-const passwordReset = (req, res, next) => {
-  res.json("비밀번호 초기화");
+const passwordReset = async (req, res, next) => {
+  const { email: emailBody, password: passwordBody } = req.body;
+  const sql = "UPDATE users SET password=? WHERE email = ?";
+  let connection;
+  const cryptedPwd = CryptoJS.AES.encrypt(
+    `${passwordBody}`,
+    `${process.env.CryptoJS_Secret_Key}`
+  ).toString();
+
+  try {
+    connection = conn();
+
+    try {
+      const [results] = await connection.query(sql, [cryptedPwd, emailBody]);
+
+      if (results.affectedRows === 1) {
+        // 업데이트 성공
+        return res
+          .status(StatusCodes.OK)
+          .json({ success: true, message: "Password updated successfully" });
+      } else {
+        // 해당 이메일에 해당하는 사용자가 없음
+        return next({
+          status: StatusCodes.NOT_FOUND,
+          message: "Not Found User",
+        });
+      }
+    } catch (error) {
+      return next({
+        status: StatusCodes.BAD_REQUEST,
+        message: error.message,
+      });
+    }
+  } catch (error) {
+    return next({
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      message: error.message,
+    });
+  } finally {
+    connection.releaseConnection();
+  }
 };
 
 export { signUp, login, passwordResetRequest, passwordReset };
