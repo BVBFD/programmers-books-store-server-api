@@ -12,10 +12,11 @@ const signUp = async (req, res, next) => {
   ).toString();
   const uniqueId = uuidv4();
   const sql = "INSERT INTO users (_id, email, password) VALUES (?, ?, ?)";
+  let connection;
 
   try {
     // 서버 접속 시도
-    const connection = conn();
+    connection = conn();
     try {
       // sql 구문 검사
       const results = await connection.query(sql, [
@@ -39,17 +40,18 @@ const signUp = async (req, res, next) => {
     });
     // 연결을 풀에 반환
   } finally {
-    return releaseConnection(connection);
+    return connection.releaseConnection();
   }
 };
 
 const login = async (req, res, next) => {
   const { email, password } = req.body;
   const sql = "SELECT * FROM users WHERE email = ?";
+  let connection;
 
   try {
     // 서버 접속 시도
-    const connection = conn();
+    connection = conn();
     try {
       // sql 구문 검사
       const [[results]] = await connection.query(sql, [email]);
@@ -121,12 +123,48 @@ const login = async (req, res, next) => {
     });
   } finally {
     // 연결을 풀에 반환
-    return releaseConnection(connection);
+    return connection.releaseConnection();
   }
 };
 
-const passwordResetRequest = (req, res, next) => {
-  res.json("비밀번호 초기화 요청");
+const passwordResetRequest = async (req, res, next) => {
+  const { email } = req.body;
+  const sql = "SELECT * FROM users WHERE email = ?";
+  // 서버 접속 시도
+  let connection;
+
+  try {
+    // 서버 접속 시도
+    connection = conn();
+    try {
+      // sql 구문 검사
+      const [[results]] = await connection.query(sql, [email]);
+      //   유저 정보가 없을 때
+      if (!results) {
+        return next({
+          status: StatusCodes.NOT_FOUND,
+          message: "Not Found User",
+        });
+      } else {
+        return res.status(StatusCodes.OK).json(results);
+      }
+      // sql 구문 에러 오류
+    } catch (error) {
+      return next({
+        status: StatusCodes.BAD_REQUEST,
+        message: error.message,
+      });
+    }
+    // 서버 접속 오류
+  } catch (error) {
+    return next({
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      message: error.message,
+    });
+    // 연결을 풀에 반환
+  } finally {
+    return connection.releaseConnection();
+  }
 };
 
 const passwordReset = (req, res, next) => {
