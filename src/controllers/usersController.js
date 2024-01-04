@@ -1,9 +1,5 @@
 import conn from "../utils/mariadb.js";
 import crypto from "crypto";
-// CryptoJS 사용한 것은 주석처리
-// 서버에서는 추천하지 않음,
-// NodeJS 코어모듈 쓰는것이 보안상 훨씬 더 나음
-// import CryptoJS from "crypto-js";
 import { v4 as uuidv4 } from "uuid";
 import { StatusCodes } from "http-status-codes";
 import jwt from "jsonwebtoken";
@@ -15,11 +11,6 @@ const signUp = async (req, res, next) => {
   const cryptedPwd = crypto
     .pbkdf2Sync(`${password}`, salt, 10000, 10, "sha512")
     .toString("base64");
-
-  // const cryptedPwd = CryptoJS.AES.encrypt(
-  //   `${password}`,
-  //   `${process.env.CryptoJS_Secret_Key}`
-  // ).toString();
 
   const uniqueId = uuidv4();
   const sql =
@@ -53,7 +44,7 @@ const signUp = async (req, res, next) => {
     });
     // 연결을 풀에 반환
   } finally {
-    return connection.releaseConnection();
+    return connection.releaseConnection(connection);
   }
 };
 
@@ -139,7 +130,7 @@ const login = async (req, res, next) => {
     });
   } finally {
     // 연결을 풀에 반환
-    return connection.releaseConnection();
+    return connection.releaseConnection(connection);
   }
 };
 
@@ -182,7 +173,7 @@ const passwordResetRequest = async (req, res, next) => {
     });
     // 연결을 풀에 반환
   } finally {
-    return connection.releaseConnection();
+    return connection.releaseConnection(connection);
   }
 };
 
@@ -235,7 +226,7 @@ const passwordReset = async (req, res, next) => {
       message: error.message,
     });
   } finally {
-    connection.releaseConnection();
+    connection.releaseConnection(connection);
   }
 };
 

@@ -10,6 +10,7 @@ import corsOpt from "./utils/corsOpt.js";
 
 import usersRouter from "./routers/users.js";
 import booksRouter from "./routers/books.js";
+import categoriesRouter from "./routers/categories.js";
 import cartsRouter from "./routers/carts.js";
 import likesRouter from "./routers/likes.js";
 import ordersRouter from "./routers/orders.js";
@@ -24,6 +25,7 @@ app.use(cookieParser(`cookie secret key`));
 
 app.use("/users", usersRouter);
 app.use("/books", booksRouter);
+app.use("/categories", categoriesRouter);
 app.use("/carts", cartsRouter);
 app.use("/likes", likesRouter);
 app.use("/orders", ordersRouter);
