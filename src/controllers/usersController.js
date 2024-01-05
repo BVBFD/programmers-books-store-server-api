@@ -10,6 +10,7 @@ const handleQuery = async (sql, params, res, next) => {
 
   try {
     connection = conn();
+
     if (
       sql ===
       "INSERT INTO users (_id, email, password, salt) VALUES (?, ?, ?, ?)"

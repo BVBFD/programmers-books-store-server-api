@@ -24,7 +24,8 @@ const getAllBookAndByCategory = async (req, res, next) => {
   const parsedIntLimit = parseInt(limit);
   const offset = parsedIntLimit * (parseInt(currentPage) - 1);
 
-  let sql = "SELECT * FROM books";
+  let sql =
+    "SELECT *, (SELECT count(*) FROM user_likes_table WHERE user_likes_table.books_id = books._id) AS likes FROM books";
   const params = [];
 
   if (news || categoryId) {
@@ -53,10 +54,15 @@ const getAllBookAndByCategory = async (req, res, next) => {
 };
 
 const getIndividualBook = async (req, res, next) => {
+  const { users_id } = req.body;
   const { id } = req.params;
-  const sql =
-    "SELECT books._id, title, category, form, isbn, img, summary, detail, author, pages, contents, price, likes, pub_date, books.updated_at, books.created_at FROM books LEFT JOIN categories ON books.category_id = categories._id WHERE books._id = ?";
-  await handleQuery(sql, [id], res, next);
+  const sql = `SELECT *, 
+                  (SELECT count(*) FROM user_likes_table WHERE user_likes_table.books_id = books._id) AS likes,
+                  (SELECT EXISTS (SELECT * FROM user_likes_table WHERE user_likes_table.users_id = ? AND user_likes_table.books_id = ?)) AS liked 
+              FROM books LEFT JOIN categories 
+              ON books.category_id = categories.category_id 
+              WHERE books._id = ?`;
+  await handleQuery(sql, [users_id, id, id], res, next);
 };
 
 const addBook = async (req, res, next) => {
