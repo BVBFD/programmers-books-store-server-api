@@ -81,3 +81,26 @@ SELECT *,
 (SELECT EXISTS (SELECT * FROM user_likes_table WHERE user_likes_table.users_id = "232331b6-c833-4754-a50c-6120774c622c" AND user_likes_table.books_id = "13a61ae0-2ffd-4a71-8929-0adfa3c2a812")) AS liked 
 FROM books LEFT JOIN categories ON books.category_id = categories.category_id 
 WHERE books._id = "13a61ae0-2ffd-4a71-8929-0adfa3c2a812";
+
+
+-- 7. 장바구니
+-- 장바구니 추가
+INSERT INTO Bookshop.cart_items (cart_items_id, users_id, books_id, quantity) 
+VALUES ("12321", "3a1942d7-e1a2-4ab8-8bed-f8af49dcf173", "13a61ae0-2ffd-4a71-8929-0adfa3c2a812", 1);
+
+-- 장바구니 아이템 목록 조회
+SELECT cart_items_id, books._id, title, summary, quantity, price 
+FROM cart_items LEFT JOIN books 
+ON cart_items.books_id = books._id;
+
+-- 장바구니 아이템 목록에서 삭제
+DELETE FROM Bookshop.cart_items 
+WHERE books_id = "13a61ae0-2ffd-4a71-8929-0adfa3c2a812" 
+AND users_id = "3a1942d7-e1a2-4ab8-8bed-f8af49dcf173"; 
+
+-- 장바구니에서 선택한 아이템 목록 조회
+SELECT cart_items_id, books._id, title, summary, quantity, price 
+FROM cart_items LEFT JOIN books 
+ON cart_items.books_id = books._id
+WHERE users_id = "3a1942d7-e1a2-4ab8-8bed-f8af49dcf173"
+AND cart_items_id IN ("22ac377b-c20d-4c1b-ba8f-4361cefee369", "63d07bab-4064-4afa-b47f-701ed7089aa7");
