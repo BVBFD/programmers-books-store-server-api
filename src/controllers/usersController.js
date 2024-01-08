@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { StatusCodes } from "http-status-codes";
 import jwt from "jsonwebtoken";
 
-const handleQuery = async (sql, params, res, next, callback) => {
+const handleQuery = async (sql, params, res, next, status, callback) => {
   let connection;
   let results;
 
@@ -23,11 +23,11 @@ const handleQuery = async (sql, params, res, next, callback) => {
     if (callback) {
       callback(results);
     } else {
-      return res.status(StatusCodes.OK).json(results);
+      return res.status(status.success).json(results);
     }
   } catch (error) {
     return next({
-      status: StatusCodes.BAD_REQUEST,
+      status: status.fail,
       message: error.message,
     });
   } finally {
@@ -46,13 +46,27 @@ const signUp = async (req, res, next) => {
   const uniqueId = uuidv4();
   const sql =
     "INSERT INTO users (_id, email, password, salt) VALUES (?, ?, ?, ?)";
+  const status = {
+    success: StatusCodes.CREATED,
+    fail: StatusCodes.BAD_REQUEST,
+  };
 
-  await handleQuery(sql, [uniqueId, email, cryptedPwd, salt], res, next);
+  await handleQuery(
+    sql,
+    [uniqueId, email, cryptedPwd, salt],
+    res,
+    next,
+    status
+  );
 };
 
 const login = async (req, res, next) => {
   const { email, password } = req.body;
   const sql = "SELECT * FROM users WHERE email = ?";
+  const status = {
+    success: StatusCodes.OK,
+    fail: StatusCodes.BAD_REQUEST,
+  };
 
   const handleLogin = async (results) => {
     if (!results) {
@@ -96,26 +110,34 @@ const login = async (req, res, next) => {
     }
   };
 
-  await handleQuery(sql, [email], res, next, handleLogin);
+  await handleQuery(sql, [email], res, next, status, handleLogin);
 };
 
 const passwordResetRequest = async (req, res, next) => {
   const { email: emailBody } = req.body;
   const sql = "SELECT * FROM users WHERE email = ?";
+  const status = {
+    success: StatusCodes.OK,
+    fail: StatusCodes.NOT_FOUND,
+  };
 
-  await handleQuery(sql, [emailBody], res, next);
+  await handleQuery(sql, [emailBody], res, next, status);
 };
 
 const passwordReset = async (req, res, next) => {
   const { email: emailBody, password: passwordBody } = req.body;
   const sql = "UPDATE users SET password=?, salt=? WHERE email = ?";
+  const status = {
+    success: StatusCodes.CREATED,
+    fail: StatusCodes.UNAUTHORIZED,
+  };
 
   const salt = crypto.randomBytes(10).toString("base64");
   const cryptedPwd = crypto
     .pbkdf2Sync(passwordBody, salt, 10000, 10, "sha512")
     .toString("base64");
 
-  await handleQuery(sql, [cryptedPwd, salt, emailBody], res, next);
+  await handleQuery(sql, [cryptedPwd, salt, emailBody], res, next, status);
 };
 
 export { signUp, login, passwordResetRequest, passwordReset };

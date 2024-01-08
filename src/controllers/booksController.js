@@ -2,16 +2,16 @@ import conn from "../utils/mariadb.js";
 import { v4 as uuidv4 } from "uuid";
 import { StatusCodes } from "http-status-codes";
 
-const handleQuery = async (sql, params, res, next) => {
+const handleQuery = async (sql, params, res, next, status) => {
   let connection;
 
   try {
     connection = conn();
     const [results] = await connection.query(sql, params);
-    return res.status(StatusCodes.OK).json(results);
+    return res.status(status.success).json(results);
   } catch (error) {
     return next({
-      status: StatusCodes.BAD_REQUEST,
+      status: status.fail,
       message: error.message,
     });
   } finally {
@@ -27,6 +27,10 @@ const getAllBookAndByCategory = async (req, res, next) => {
   let sql =
     "SELECT *, (SELECT count(*) FROM user_likes_table WHERE user_likes_table.books_id = books._id) AS likes FROM books";
   const params = [];
+  const status = {
+    success: StatusCodes.OK,
+    fail: StatusCodes.BAD_REQUEST,
+  };
 
   if (news || categoryId) {
     sql += " WHERE";
@@ -50,7 +54,7 @@ const getAllBookAndByCategory = async (req, res, next) => {
   sql += " LIMIT ? OFFSET ?";
   params.push(parsedIntLimit, offset);
 
-  await handleQuery(sql, params, res, next);
+  await handleQuery(sql, params, res, next, status);
 };
 
 const getIndividualBook = async (req, res, next) => {
@@ -62,7 +66,12 @@ const getIndividualBook = async (req, res, next) => {
               FROM books LEFT JOIN categories 
               ON books.category_id = categories.category_id 
               WHERE books._id = ?`;
-  await handleQuery(sql, [users_id, id, id], res, next);
+  const status = {
+    success: StatusCodes.OK,
+    fail: StatusCodes.BAD_REQUEST,
+  };
+
+  await handleQuery(sql, [users_id, id, id], res, next, status);
 };
 
 const addBook = async (req, res, next) => {
@@ -83,6 +92,10 @@ const addBook = async (req, res, next) => {
   const uniqueId = uuidv4();
   const sql =
     "INSERT INTO books (_id, title, form, isbn, img, summary, detail, author, pages, contents, price, pub_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  const status = {
+    success: StatusCodes.CREATED,
+    fail: StatusCodes.BAD_REQUEST,
+  };
 
   await handleQuery(
     sql,
@@ -101,7 +114,8 @@ const addBook = async (req, res, next) => {
       pub_date,
     ],
     res,
-    next
+    next,
+    status
   );
 };
 
