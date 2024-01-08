@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { StatusCodes } from "http-status-codes";
 import jwt from "jsonwebtoken";
 
-const handleQuery = async (sql, params, res, next) => {
+const handleQuery = async (sql, params, res, next, callback) => {
   let connection;
   let results;
 
@@ -20,7 +20,11 @@ const handleQuery = async (sql, params, res, next) => {
       [[results]] = await connection.query(sql, params);
     }
 
-    return res.status(StatusCodes.OK).json(results);
+    if (callback) {
+      callback(results);
+    } else {
+      return res.status(StatusCodes.OK).json(results);
+    }
   } catch (error) {
     return next({
       status: StatusCodes.BAD_REQUEST,
