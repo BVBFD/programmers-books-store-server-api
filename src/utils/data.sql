@@ -104,3 +104,29 @@ FROM cart_items LEFT JOIN books
 ON cart_items.books_id = books._id
 WHERE users_id = "3a1942d7-e1a2-4ab8-8bed-f8af49dcf173"
 AND cart_items_id IN ("22ac377b-c20d-4c1b-ba8f-4361cefee369", "63d07bab-4064-4afa-b47f-701ed7089aa7");
+
+-- 주문하기
+-- 배송 정보 입력
+INSERT INTO delivery (_id, address, receiver, contact) 
+VALUES ("kjfd1231-dfjkdjk34-323213dfvdsa-fdajkdgd121", "서울시 강남구", "이성은", "010-9123-3232");
+
+-- 주문 정보 입력
+-- 배송정보를 먼저 입력해서 해당 값을 delivery_id 외래키 값이기 때문에 먼저 받아야 이 query문 실행 가능함
+INSERT INTO orders (_id, users_id, delivery_id, books_title, total_quantity, total_price) 
+VALUES ("FDSAF-12RFSDAV-23BFVG-VCXWSE-321GF-HFGHDF", "3a1942d7-e1a2-4ab8-8bed-f8af49dcf173", "kjfd1231-dfjkdjk34-323213dfvdsa-fdajkdgd121", "해리포터", 3, 120000);
+
+-- 주문 상세 목록 입력
+-- 마찬가지로 orders_id가 외래키값이기 때문에 orders 테이블에 해당 데이터 행이 추가되어야 아래 query문 실행 가능함
+INSERT INTO ordered_book (_id, orders_id, books_id, quantity) 
+VALUES ("FDFGJK156FV1DF1GFDS56-G4156FD$fg4d546df6", "FDSAF-12RFSDAV-23BFVG-VCXWSE-321GF-HFGHDF", "13a61ae0-2ffd-4a71-8929-0adfa3c2a812", 3);
+
+INSERT INTO ordered_book (_id, orders_id, books_id, quantity) 
+VALUES ("fdsfFGJdfsfFDS56-G4gbfdgs", "FDSAF-12RFSDAV-23BFVG-VCXWSE-321GF-HFGHDF", "2c644524-c692-4423-9db3-605ab2b5aacb", 1);
+
+-- 최신 INSERT DATA ROW 행 가져오기
+-- INTEGER 타입일 경우 이것이 맞지만, 나는 문자열로 정의했기 때문에 다른 방법이 필요
+SELECT last_insert_id(_id) FROM ordered_book;
+SELECT max(_id) FROM ordered_book;
+
+-- 문자열일 경우. created_at을 기준으로 정렬해서 LIMIT 문법을 통해서 최신행을 가져옴
+SELECT * FROM ordered_book ORDER BY ordered_book.created_at DESC LIMIT 1;
