@@ -5,7 +5,7 @@ import conn from "../utils/mariadb.js";
 import { v4 as uuidv4 } from "uuid";
 import { StatusCodes } from "http-status-codes";
 
-const handleQuery = async (sql, params, res, next, status) => {
+const handleOrderQuery = async (sql, params, res, next, status) => {
   let connection;
 
   try {
@@ -55,7 +55,7 @@ router.post("/", async (req, res, next) => {
   let params = [uuidv4(), address, receiver, contact];
   let results;
 
-  results = await handleQuery(sql, params, res, next, status);
+  results = await handleOrderQuery(sql, params, res, next, status);
   sql = "SELECT * FROM delivery ORDER BY delivery.created_at DESC LIMIT 1";
   [results] = await handleGetRecentInsertQuery(sql, next, status);
   // delivery 테이블 배송정보 입력
@@ -72,7 +72,7 @@ router.post("/", async (req, res, next) => {
     totalPrice,
   ];
 
-  results = await handleQuery(sql, params, res, next, status);
+  results = await handleOrderQuery(sql, params, res, next, status);
   sql = "SELECT * FROM orders ORDER BY orders.created_at DESC LIMIT 1";
   [results] = await handleGetRecentInsertQuery(sql, next, status);
   // 주문 정보 입력
@@ -82,14 +82,14 @@ router.post("/", async (req, res, next) => {
     sql =
       "INSERT INTO ordered_book (_id, orders_id, books_id, quantity) VALUES (?, ?, ?, ?)";
     params = [uuidv4(), `${results._id}`, `${item.books_id}`, item.quantity];
-    await handleQuery(sql, params, res, next, status);
+    await handleOrderQuery(sql, params, res, next, status);
   });
   // 주문 상세 목록 입력
 
   // 주문 조회
-  sql = `SELECT * FROM ordered_book WHERE ordered_book.orders_id = ? ORDER BY ordered_book.created_at DESC LIMIT ?`;
-  params = [results._id, items.length];
-  results = await handleQuery(sql, params, res, next, status);
+  sql = `SELECT * FROM ordered_book WHERE ordered_book.orders_id = ? ORDER BY created_at DESC`;
+  params = [results._id];
+  results = await handleOrderQuery(sql, params, res, next, status);
 
   return res.status(StatusCodes.OK).json(results);
 });
