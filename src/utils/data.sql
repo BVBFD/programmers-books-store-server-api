@@ -130,3 +130,47 @@ SELECT max(_id) FROM ordered_book;
 
 -- 문자열일 경우. created_at을 기준으로 정렬해서 LIMIT 문법을 통해서 최신행을 가져옴
 SELECT * FROM ordered_book ORDER BY ordered_book.created_at DESC LIMIT 1;
+
+
+-- 8. MySQL 데이터 삭제하는 방법
+-- 1) DELETE 
+-- : 조건이 없으면, 모든 행이 삭제됩니다. 
+-- : 조건이 있으면, 조건에 맞는 행만 삭제됩니다.
+-- ( 테이블은 당연히 남아있어요. )
+DELETE FROM <테이블명> (WHERE 조건);
+
+-- 2) DROP 
+-- : 테이블을 통째로 삭제합니다.
+DROP TABLE <테이블명>;
+
+-- 3) TRUNCATE
+-- : 모든 행이 삭제됩니다.
+-- ( 테이블은 당연히 남아있어요. )
+TRUNCATE <테이블명>;
+
+-- 혹시 남아있는 외래키 값 떄문에 못 지울 때에는 아래 명령어
+-- 즉 지금은 외래키 check 하지 말고, 실행하자.
+SET FOREIGN_KEY_CHECKS = 0; 
+
+-- 그리고 나서 원래대로 아래의 쿼리문을 통해서 복구를 해줘야함.
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- 결제된 도서 장바구니 삭제
+ DELETE FROM Bookshop.cart_items 
+ WHERE books_id IN (?, ?) AND quantity IN (?, ?) 
+ AND users_id = ?;
+
+--  주문 내역 조회
+SELECT orders._id, orders.users_id, books_title, total_quantity, total_price, orders.created_at, address, receiver, contact
+FROM orders LEFT JOIN delivery 
+ON orders.delivery_id = delivery._id
+WHERE orders.users_id = "3a1942d7-e1a2-4ab8-8bed-f8af49dcf173"
+ORDER BY orders.created_at DESC;
+
+-- 주문 상세 상품 조회
+SELECT books_id, title, author, price, quantity
+FROM ordered_book LEFT JOIN books 
+ON ordered_book.books_id = books._id
+WHERE ordered_book.orders_id = ?
+ORDER BY ordered_book.created_at DESC
+-- 주문 상세 상품 조회

@@ -86,22 +86,47 @@ router.post("/", async (req, res, next) => {
   });
   // 주문 상세 목록 입력
 
-  // 주문 조회
-  sql = `SELECT * FROM ordered_book WHERE ordered_book.orders_id = ? ORDER BY created_at DESC`;
-  params = [results._id];
+  // 결제된 도서 장바구니 삭제
+  sql =
+    "DELETE FROM Bookshop.cart_items WHERE books_id IN (?, ?) AND quantity IN (?, ?) AND users_id = ?";
+  params = items.map((item) => item.books_id);
+  items.forEach((item) => {
+    params.push(item.quantity);
+  });
+  params.push(userId);
+  await handleOrderQuery(sql, params, res, next, status);
+  // 결제된 도서 장바구니 삭제
+
+  // 주문 내역 조회
+  sql = `SELECT orders._id, orders.users_id, books_title, total_quantity, total_price, orders.created_at, address, receiver, contact
+    FROM orders LEFT JOIN delivery 
+    ON orders.delivery_id = delivery._id
+    WHERE orders.users_id = ?
+    ORDER BY orders.created_at DESC;`;
+  params = [userId];
   results = await handleOrderQuery(sql, params, res, next, status);
+  // 주문 내역 조회
 
   return res.status(StatusCodes.OK).json(results);
 });
 
-// 주문 목록 조회
-router.get("/", (req, res, next) => {
-  res.json("주문 목록 조회");
-});
-
 // 주문 상세 상품 조회
-router.get("/:id", (req, res, next) => {
-  res.json("주문 상세 상품 조회");
+router.get("/:id", async (req, res, next) => {
+  const { id } = req.params;
+  const status = {
+    success: StatusCodes.OK,
+    fail: StatusCodes.BAD_REQUEST,
+  };
+  // 주문 상세 상품 조회
+  const sql = `SELECT books_id, title, author, price, quantity
+    FROM ordered_book LEFT JOIN books 
+    ON ordered_book.books_id = books._id
+    WHERE ordered_book.orders_id = ?
+    ORDER BY ordered_book.created_at DESC`;
+  const params = [id];
+  const results = await handleOrderQuery(sql, params, res, next, status);
+  // 주문 상세 상품 조회
+  return res.status(status.success).json(results);
 });
 
 export default router;
