@@ -95,8 +95,8 @@ const login = async (req, res, next) => {
         res.cookie("token", token, {
           maxAge: 3.6e6 * 24,
           httpOnly: true,
-          sameSite: "none",
-          secure: false,
+          sameSite: "None",
+          secure: true,
         });
         return res
           .status(StatusCodes.OK)
@@ -114,7 +114,7 @@ const login = async (req, res, next) => {
 };
 
 const passwordResetRequest = async (req, res, next) => {
-  const { email: emailBody } = req.body;
+  const { email: emailBody } = req.decoded.payload;
   const sql = "SELECT * FROM users WHERE email = ?";
   const status = {
     success: StatusCodes.OK,
@@ -125,7 +125,8 @@ const passwordResetRequest = async (req, res, next) => {
 };
 
 const passwordReset = async (req, res, next) => {
-  const { email: emailBody, password: passwordBody } = req.body;
+  const { email: emailBody } = req.decoded.payload;
+  const { password: passwordBody } = req.body;
   const sql = "UPDATE users SET password=?, salt=? WHERE email = ?";
   const status = {
     success: StatusCodes.CREATED,

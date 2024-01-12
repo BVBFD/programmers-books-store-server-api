@@ -19,7 +19,7 @@ const handleQuery = async (sql, params, res, next, status) => {
 };
 
 const addLike = async (req, res, next) => {
-  const { users_id } = req.body;
+  const { _id: users_id } = req.decoded.payload;
   const { id } = req.params;
   const status = {
     success: StatusCodes.CREATED,
@@ -33,7 +33,7 @@ const addLike = async (req, res, next) => {
 };
 
 const removeLike = async (req, res, next) => {
-  const { users_id } = req.body;
+  const { _id: users_id } = req.decoded.payload;
   const { id } = req.params;
 
   let sql = "DELETE FROM user_likes_table WHERE users_id = ? AND books_id = ?";

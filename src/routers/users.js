@@ -5,6 +5,7 @@ import {
   passwordReset,
   signUp,
 } from "../controllers/usersController.js";
+import verifyToken from "../middlewares/verifyToken.js";
 
 const router = Router();
 
@@ -15,9 +16,9 @@ router.post("/sign-up", signUp);
 router.post("/login", login);
 
 // 비밀번호 초기화 요청
-router.post("/reset", passwordResetRequest);
+router.post("/reset", verifyToken, passwordResetRequest);
 
 // 비밀번호 초기화
-router.put("/reset", passwordReset);
+router.put("/reset", verifyToken, passwordReset);
 
 export default router;

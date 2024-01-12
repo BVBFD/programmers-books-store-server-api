@@ -20,7 +20,8 @@ const handleQuery = async (sql, params, res, next, status) => {
 };
 
 const addCartItem = async (req, res, next) => {
-  const { users_id, books_id, quantity } = req.body;
+  const { _id: users_id } = req.decoded.payload;
+  const { books_id, quantity } = req.body;
 
   const uniqueId = uuidv4();
   const params = [uniqueId, users_id, books_id, quantity];
@@ -35,7 +36,8 @@ const addCartItem = async (req, res, next) => {
 };
 
 const getItemsOrSelectedItemsFromCart = async (req, res, next) => {
-  const { users_id, selected } = req.body;
+  const { _id: users_id } = req.decoded.payload;
+  const { selected } = req.body;
   let params;
   let sql;
   const status = {
@@ -57,8 +59,8 @@ const getItemsOrSelectedItemsFromCart = async (req, res, next) => {
 };
 
 const removeCartItem = async (req, res, next) => {
+  const { _id: users_id } = req.decoded.payload;
   const { id: books_id } = req.params;
-  const { users_id } = req.body;
   const params = [books_id, users_id];
   const sql = "DELETE FROM cart_items WHERE books_id = ? AND users_id = ?";
   const status = {
