@@ -39,7 +39,8 @@ const getItemsOrSelectedItemsFromCart = async (req, res, next) => {
   const { _id: users_id } = req.decoded.payload;
   const { selected } = req.body;
   let params;
-  let sql;
+  let sql =
+    "SELECT cart_items_id, books._id, title, summary, quantity, price FROM cart_items LEFT JOIN books ON cart_items.books_id = books._id WHERE users_id = ?";
   const status = {
     success: StatusCodes.OK,
     fail: StatusCodes.BAD_REQUEST,
@@ -47,12 +48,9 @@ const getItemsOrSelectedItemsFromCart = async (req, res, next) => {
 
   if (selected) {
     params = [users_id, selected];
-    sql =
-      "SELECT cart_items_id, books._id, title, summary, quantity, price FROM cart_items LEFT JOIN books ON cart_items.books_id = books._id WHERE users_id = ? AND cart_items_id IN (?)";
+    sql += " AND cart_items_id IN (?)";
   } else {
     params = [users_id];
-    sql =
-      "SELECT cart_items_id, books._id, title, summary, quantity, price FROM cart_items LEFT JOIN books ON cart_items.books_id = books._id WHERE users_id = ? AND cart_items_id";
   }
 
   await handleQuery(sql, params, res, next, status);
