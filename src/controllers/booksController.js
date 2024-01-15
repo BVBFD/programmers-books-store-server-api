@@ -8,7 +8,17 @@ const handleQuery = async (sql, params, res, next, status) => {
   try {
     connection = conn();
     const [results] = await connection.query(sql, params);
-    return res.status(status.success).json(results);
+
+    if (
+      sql.includes(
+        "SELECT *, (SELECT count(*) FROM user_likes_table WHERE user_likes_table.books_id = books._id) AS likes FROM books"
+      ) ||
+      sql.includes("SELECT count(*) as totalBooksCount from books")
+    ) {
+      return results;
+    } else {
+      return res.status(status.success).json(results);
+    }
   } catch (error) {
     return next({
       status: status.fail,
@@ -26,7 +36,11 @@ const getAllBookAndByCategory = async (req, res, next) => {
 
   let sql =
     "SELECT *, (SELECT count(*) FROM user_likes_table WHERE user_likes_table.books_id = books._id) AS likes FROM books";
-  const params = [];
+  let params = [];
+
+  let sqlCount = "SELECT count(*) as totalBooksCount from books";
+  let paramsCount = [];
+
   const status = {
     success: StatusCodes.OK,
     fail: StatusCodes.BAD_REQUEST,
@@ -34,27 +48,51 @@ const getAllBookAndByCategory = async (req, res, next) => {
 
   if (news || categoryId) {
     sql += " WHERE";
+    sqlCount += " WHERE";
 
     if (news && !categoryId) {
       sql += " pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()";
+      sqlCount +=
+        " pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()";
     }
 
     if (categoryId && !news) {
       sql += " category_id = ?";
+      sqlCount += " category_id = ?";
       params.push(categoryId);
+      paramsCount.push(categoryId);
     }
 
     if (categoryId && news) {
       sql +=
         " pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW() AND category_id = ?";
+      sqlCount +=
+        " pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW() AND category_id = ?";
       params.push(categoryId);
+      paramsCount.push(categoryId);
     }
   }
 
   sql += " LIMIT ? OFFSET ?";
   params.push(parsedIntLimit, offset);
 
-  await handleQuery(sql, params, res, next, status);
+  const books = await handleQuery(sql, params, res, next, status);
+
+  const [{ totalBooksCount }] = await handleQuery(
+    sqlCount,
+    paramsCount,
+    res,
+    next,
+    status
+  );
+
+  return res.status(status.success).json({
+    books,
+    pagination: {
+      currentPage: parseInt(currentPage),
+      totalBooksCount,
+    },
+  });
 };
 
 const getIndividualBook = async (req, res, next) => {
