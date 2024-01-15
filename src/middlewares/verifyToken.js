@@ -5,11 +5,15 @@ const verifyToken = (req, res, next) => {
   const token = req.headers["token"];
 
   try {
-    const decoded = jwt.verify(`${token}`, `${process.env.JWT_PRIVATE_KEY}`, {
-      complete: true,
-    });
+    if (token) {
+      const decoded = jwt.verify(`${token}`, `${process.env.JWT_PRIVATE_KEY}`, {
+        complete: true,
+      });
+      req.decoded = decoded;
+    } else {
+      req.decoded = "token not found!";
+    }
 
-    req.decoded = decoded;
     next();
   } catch (error) {
     if (

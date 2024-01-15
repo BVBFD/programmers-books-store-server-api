@@ -58,20 +58,36 @@ const getAllBookAndByCategory = async (req, res, next) => {
 };
 
 const getIndividualBook = async (req, res, next) => {
-  const { users_id } = req.body;
   const { id } = req.params;
-  const sql = `SELECT *, 
-                  (SELECT count(*) FROM user_likes_table WHERE user_likes_table.books_id = books._id) AS likes,
-                  (SELECT EXISTS (SELECT * FROM user_likes_table WHERE user_likes_table.users_id = ? AND user_likes_table.books_id = ?)) AS liked 
-              FROM books LEFT JOIN categories 
-              ON books.category_id = categories.category_id 
-              WHERE books._id = ?`;
   const status = {
     success: StatusCodes.OK,
     fail: StatusCodes.BAD_REQUEST,
   };
 
-  await handleQuery(sql, [users_id, id, id], res, next, status);
+  const commonPartOfQuery = `FROM books LEFT JOIN categories 
+    ON books.category_id = categories.category_id 
+    WHERE books._id = ?`;
+
+  let sql = `SELECT *, 
+    (SELECT count(*) FROM user_likes_table WHERE user_likes_table.books_id = books._id) AS likes`;
+
+  if (req.decoded !== "token not found!") {
+    // 로그인 상태이면 => liked 추가
+    const { _id: users_id } = req.decoded.payload;
+    sql += `,
+      (SELECT EXISTS (SELECT * FROM user_likes_table WHERE user_likes_table.users_id = ? AND user_likes_table.books_id = ?)) AS liked`;
+
+    await handleQuery(
+      sql + ` ${commonPartOfQuery}`,
+      [users_id, id, id],
+      res,
+      next,
+      status
+    );
+  } else {
+    // 로그인 상태가 아니면 => liked 빼고
+    await handleQuery(sql + ` ${commonPartOfQuery}`, [id], res, next, status);
+  }
 };
 
 const addBook = async (req, res, next) => {

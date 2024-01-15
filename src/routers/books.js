@@ -4,6 +4,7 @@ import {
   getAllBookAndByCategory,
   getIndividualBook,
 } from "../controllers/booksController.js";
+import verifyToken from "../middlewares/verifyToken.js";
 
 const router = Router();
 
@@ -11,7 +12,7 @@ const router = Router();
 router.get("/", getAllBookAndByCategory);
 
 // 개별 도서 조회
-router.get("/:id", getIndividualBook);
+router.get("/:id", verifyToken, getIndividualBook);
 
 // 개별 도서 추가
 router.post("/", addBook);
