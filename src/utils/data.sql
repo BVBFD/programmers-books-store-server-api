@@ -174,3 +174,8 @@ ON ordered_book.books_id = books._id
 WHERE ordered_book.orders_id = ?
 ORDER BY ordered_book.created_at DESC
 -- 주문 상세 상품 조회
+
+-- total books count 구하기
+SELECT SQL_CALC_FOUND_ROWS * FROM Bookshop.books;
+SELECT found_rows();
+-- total books count 구하기
