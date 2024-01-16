@@ -76,7 +76,16 @@ const getAllBookAndByCategory = async (req, res, next) => {
   sql += " LIMIT ? OFFSET ?";
   params.push(parsedIntLimit, offset);
 
-  const books = await handleQuery(sql, params, res, next, status);
+  let books = await handleQuery(sql, params, res, next, status);
+  books = books.map(
+    ({ category_id, pub_date, updated_at, created_at, ...book }) => ({
+      ...book,
+      categoryId: category_id,
+      pubDate: pub_date,
+      updatedAt: updated_at,
+      createdAt: created_at,
+    })
+  );
 
   const [{ totalBooksCount }] = await handleQuery(
     sqlCount,
