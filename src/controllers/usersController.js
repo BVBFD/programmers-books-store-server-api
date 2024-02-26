@@ -16,9 +16,12 @@ const handleQuery = async (sql, params, res, next, status, callback) => {
       "INSERT INTO users (_id, email, password, salt) VALUES (?, ?, ?, ?)"
     ) {
       [results] = await connection.query(sql, params);
-    } else {
+    } else if (sql === "SELECT * FROM users WHERE email = ?") {
       [[results]] = await connection.query(sql, params);
+    } else {
+      [results] = await connection.query(sql, params);
     }
+    console.log(results);
 
     if (callback) {
       callback(results);
@@ -114,7 +117,7 @@ const login = async (req, res, next) => {
 };
 
 const passwordResetRequest = async (req, res, next) => {
-  const { email: emailBody } = req.decoded.payload;
+  const { email: emailBody } = req.decoded;
   const sql = "SELECT * FROM users WHERE email = ?";
   const status = {
     success: StatusCodes.OK,
@@ -127,7 +130,7 @@ const passwordResetRequest = async (req, res, next) => {
 const passwordReset = async (req, res, next) => {
   const { email: emailBody } = req.decoded.payload;
   const { password: passwordBody } = req.body;
-  const sql = "UPDATE users SET password=?, salt=? WHERE email = ?";
+  const sql = "UPDATE users SET password=?, salt=? WHERE email=?";
   const status = {
     success: StatusCodes.CREATED,
     fail: StatusCodes.UNAUTHORIZED,
