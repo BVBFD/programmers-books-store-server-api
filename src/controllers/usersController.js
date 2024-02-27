@@ -21,7 +21,6 @@ const handleQuery = async (sql, params, res, next, status, callback) => {
     } else {
       [results] = await connection.query(sql, params);
     }
-    console.log(results);
 
     if (callback) {
       callback(results);
@@ -103,7 +102,7 @@ const login = async (req, res, next) => {
         });
         return res
           .status(StatusCodes.OK)
-          .json({ _id, email, created_at, updated_at });
+          .json({ _id, email, created_at, updated_at, token });
       } else {
         return next({
           status: StatusCodes.UNAUTHORIZED,

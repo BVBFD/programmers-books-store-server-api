@@ -7,8 +7,16 @@ const handleQuery = async (sql, params, res, next, status) => {
 
   try {
     connection = conn();
-    const [results] = await connection.query(sql, params);
-
+    let [results] = await connection.query(sql, params);
+    results = results?.map(
+      ({ category_id, pub_date, updated_at, created_at, ...book }) => ({
+        ...book,
+        categoryId: category_id,
+        pubDate: pub_date,
+        updatedAt: updated_at,
+        createdAt: created_at,
+      })
+    );
     if (
       sql.includes(
         "SELECT *, (SELECT count(*) FROM user_likes_table WHERE user_likes_table.books_id = books._id) AS likes FROM books"
@@ -77,31 +85,29 @@ const getAllBookAndByCategory = async (req, res, next) => {
   params.push(parsedIntLimit, offset);
 
   let books = await handleQuery(sql, params, res, next, status);
-  books = books.map(
-    ({ category_id, pub_date, updated_at, created_at, ...book }) => ({
-      ...book,
-      categoryId: category_id,
-      pubDate: pub_date,
-      updatedAt: updated_at,
-      createdAt: created_at,
-    })
-  );
 
-  const [{ totalBooksCount }] = await handleQuery(
-    sqlCount,
-    paramsCount,
-    res,
-    next,
-    status
-  );
+  try {
+    const [{ totalBooksCount }] = await handleQuery(
+      sqlCount,
+      paramsCount,
+      res,
+      next,
+      status
+    );
 
-  return res.status(status.success).json({
-    books,
-    pagination: {
-      currentPage: parseInt(currentPage),
-      totalBooksCount,
-    },
-  });
+    return (
+      totalBooksCount &&
+      res.status(status.success).json({
+        books,
+        pagination: {
+          currentPage: parseInt(currentPage),
+          totalBooksCount,
+        },
+      })
+    );
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const getIndividualBook = async (req, res, next) => {
