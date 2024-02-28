@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { StatusCodes } from "http-status-codes";
 
 const verifyToken = (req, res, next) => {
-  const token = req.headers["token"];
+  const token = req.headers.token;
 
   try {
     if (token) {
