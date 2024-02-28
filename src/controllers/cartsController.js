@@ -20,6 +20,12 @@ const handleQuery = async (sql, params, res, next, status) => {
 };
 
 const addCartItem = async (req, res, next) => {
+  if (req.decoded === "token not found!")
+    return next({
+      status: 401,
+      message: "로그인을 해주세요!",
+    });
+
   const { _id: users_id } = req.decoded.payload;
   const { books_id, quantity } = req.body;
 
