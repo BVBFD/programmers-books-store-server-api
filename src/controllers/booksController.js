@@ -124,7 +124,7 @@ const getIndividualBook = async (req, res, next) => {
   let sql = `SELECT *, 
     (SELECT count(*) FROM user_likes_table WHERE user_likes_table.books_id = books._id) AS likes`;
 
-  if (req.decoded !== "token not found!") {
+  if (req.decoded.payload) {
     // 로그인 상태이면 => liked 추가
     const { _id: users_id } = req.decoded.payload;
     sql += `,
