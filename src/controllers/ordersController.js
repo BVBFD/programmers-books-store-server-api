@@ -70,17 +70,25 @@ const handleOrders = async (req, res, next) => {
   ];
 
   results = await handleOrderQuery(sql, params, res, next, status);
-  sql = "SELECT * FROM orders ORDER BY orders.created_at DESC LIMIT 1";
-  [results] = await handleGetRecentInsertQuery(sql, next, status);
   // 주문 정보 입력
 
   // 주문 상세 목록 입력
+  sql = "SELECT * FROM orders ORDER BY orders.created_at DESC LIMIT 1";
+  [results] = await handleGetRecentInsertQuery(sql, next, status);
+  const orders_id = results._id;
+
   items.forEach(async (item) => {
+    sql = `SELECT books_id FROM Bookshop.cart_items WHERE cart_items_id = ?`;
+    params = [item];
+    results = await handleOrderQuery(sql, params, res, next, status);
+    const { books_id } = results[0];
+
     sql =
-      "INSERT INTO ordered_book (_id, orders_id, books_id ) VALUES (?, ?, ? )";
-    params = [uuidv4(), `${results._id}`, `${item}`];
+      "INSERT INTO ordered_book (_id, orders_id, books_id) VALUES (?, ?, ?)";
+    params = [uuidv4(), `${orders_id}`, `${books_id}`];
     await handleOrderQuery(sql, params, res, next, status);
   });
+
   // 주문 상세 목록 입력
 
   // 결제된 도서 장바구니 삭제
@@ -122,6 +130,7 @@ const handleGetOrderDetails = async (req, res, next) => {
               ORDER BY ordered_book.created_at DESC`;
   const params = [id, userId];
   const results = await handleOrderQuery(sql, params, res, next, status);
+  console.log(results);
   // 주문 상세 상품 조회
   return res.status(status.success).json(results);
 };
