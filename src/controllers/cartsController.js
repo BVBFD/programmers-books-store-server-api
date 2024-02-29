@@ -64,9 +64,9 @@ const getItemsOrSelectedItemsFromCart = async (req, res, next) => {
 
 const removeCartItem = async (req, res, next) => {
   const { _id: users_id } = req.decoded.payload;
-  const { id: books_id } = req.params;
-  const params = [books_id, users_id];
-  const sql = "DELETE FROM cart_items WHERE books_id = ? AND users_id = ?";
+  const { id: cart_items_id } = req.params;
+  const params = [cart_items_id, users_id];
+  const sql = "DELETE FROM cart_items WHERE cart_items_id = ? AND users_id = ?";
   const status = {
     success: StatusCodes.NO_CONTENT,
     fail: StatusCodes.NOT_FOUND,

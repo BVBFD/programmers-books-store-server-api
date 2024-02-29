@@ -84,7 +84,7 @@ const handleOrders = async (req, res, next) => {
   // 주문 상세 목록 입력
 
   // 결제된 도서 장바구니 삭제
-  const cartItemsIds = items.map((item) => item.cart_items_id);
+  const cartItemsIds = items.map((item) => item);
   const placeholders = cartItemsIds.map(() => "?").join(",");
   sql = `DELETE FROM Bookshop.cart_items WHERE cart_items_id IN (${placeholders}) AND users_id = ?`;
   params = [...cartItemsIds, userId];
