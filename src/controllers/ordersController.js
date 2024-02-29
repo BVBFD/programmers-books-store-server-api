@@ -120,7 +120,7 @@ const handleGetOrderDetails = async (req, res, next) => {
     fail: StatusCodes.BAD_REQUEST,
   };
   // 주문 상세 상품 조회
-  const sql = `SELECT books_id, title, author, price, quantity, users_id
+  const sql = `SELECT books_id, title, author, price, users_id
               FROM ordered_book LEFT JOIN books 
               ON ordered_book.books_id = books._id
               LEFT JOIN orders 
@@ -130,7 +130,6 @@ const handleGetOrderDetails = async (req, res, next) => {
               ORDER BY ordered_book.created_at DESC`;
   const params = [id, userId];
   const results = await handleOrderQuery(sql, params, res, next, status);
-  console.log(results);
   // 주문 상세 상품 조회
   return res.status(status.success).json(results);
 };
