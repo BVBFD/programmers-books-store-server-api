@@ -77,20 +77,17 @@ const handleOrders = async (req, res, next) => {
   // 주문 상세 목록 입력
   items.forEach(async (item) => {
     sql =
-      "INSERT INTO ordered_book (_id, orders_id, books_id, quantity) VALUES (?, ?, ?, ?)";
-    params = [uuidv4(), `${results._id}`, `${item.books_id}`, item.quantity];
+      "INSERT INTO ordered_book (_id, orders_id, books_id ) VALUES (?, ?, ? )";
+    params = [uuidv4(), `${results._id}`, `${item}`];
     await handleOrderQuery(sql, params, res, next, status);
   });
   // 주문 상세 목록 입력
 
   // 결제된 도서 장바구니 삭제
-  sql =
-    "DELETE FROM Bookshop.cart_items WHERE books_id IN (?, ?) AND quantity IN (?, ?) AND users_id = ?";
-  params = items.map((item) => item.books_id);
-  items.forEach((item) => {
-    params.push(item.quantity);
-  });
-  params.push(userId);
+  const cartItemsIds = items.map((item) => item.cart_items_id);
+  const placeholders = cartItemsIds.map(() => "?").join(",");
+  sql = `DELETE FROM Bookshop.cart_items WHERE cart_items_id IN (${placeholders}) AND users_id = ?`;
+  params = [...cartItemsIds, userId];
   await handleOrderQuery(sql, params, res, next, status);
   // 결제된 도서 장바구니 삭제
 
