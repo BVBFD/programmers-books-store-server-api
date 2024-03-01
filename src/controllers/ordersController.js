@@ -112,14 +112,13 @@ const handleOrders = async (req, res, next) => {
   return res.status(StatusCodes.OK).json(results);
 };
 
-const handleGetOrderDetails = async (req, res, next) => {
+const handleGetOrders = async (req, res, next) => {
   const { _id: userId } = req.decoded.payload;
-  // const { id } = req.params;
   const status = {
     success: StatusCodes.OK,
     fail: StatusCodes.BAD_REQUEST,
   };
-  // 주문 상세 상품 조회
+  // 주문 조회
   const sql = `SELECT orders._id, receiver, address, contact, orders.created_at, contact, orders.books_title, total_price, total_quantity 
       FROM orders
       LEFT JOIN delivery 
@@ -128,8 +127,41 @@ const handleGetOrderDetails = async (req, res, next) => {
       ORDER BY orders.created_at DESC;`;
   const params = [userId];
   const results = await handleOrderQuery(sql, params, res, next, status);
-  // 주문 상세 상품 조회
+  // 주문 조회
   return res.status(status.success).json(results);
 };
 
-export { handleOrders, handleGetOrderDetails };
+const handleGetOrderDetail = async (req, res, next) => {
+  const { id } = req.params;
+
+  const status = {
+    success: StatusCodes.OK,
+    fail: StatusCodes.BAD_REQUEST,
+  };
+  // 주문 상세 조회
+  const sql = `
+    SELECT
+        ordered_book.orders_id AS orders_id,
+        books._id AS books_id,
+        MAX(ordered_book.created_at) AS created_at,
+        title,
+        author,
+        price,
+        COUNT(ordered_book._id) AS quantity
+    FROM
+        ordered_book
+    LEFT JOIN
+        books ON ordered_book.books_id = books._id
+    WHERE
+        orders_id = ?
+    GROUP BY
+        books._id, title, author, price
+    ORDER BY 
+        created_at DESC;`;
+  const params = [id];
+  const results = await handleOrderQuery(sql, params, res, next, status);
+  // 주문 상세 조회
+  return res.status(status.success).json(results);
+};
+
+export { handleOrders, handleGetOrders, handleGetOrderDetail };
