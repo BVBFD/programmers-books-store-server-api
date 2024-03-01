@@ -10,6 +10,6 @@ const router = Router();
 router.post("/", verifyToken, handleOrders);
 
 // 주문 상세 상품 조회
-router.get("/:id", verifyToken, handleGetOrderDetails);
+router.get("/", verifyToken, handleGetOrderDetails);
 
 export default router;
