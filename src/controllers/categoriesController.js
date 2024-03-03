@@ -9,12 +9,16 @@ const handleQuery = async (sql, params, res, next, status) => {
     const [results] = await connection.query(sql, params);
     return res.status(status.success).json(results);
   } catch (error) {
+    const errorMessage = error.message || "Unknown error occurred";
+    console.error(`Error in handleQuery: ${errorMessage}`);
     return next({
       status: status.fail,
-      message: error.message,
+      message: errorMessage,
     });
   } finally {
-    connection.releaseConnection(connection);
+    if (connection) {
+      connection.releaseConnection(connection);
+    }
   }
 };
 

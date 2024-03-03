@@ -43,6 +43,8 @@ const addCartItem = async (req, res, next) => {
 
 const getItemsOrSelectedItemsFromCart = async (req, res, next) => {
   const { _id: users_id } = req.decoded.payload;
+  if (!users_id) return;
+
   const { selected } = req.body;
   let params;
   let sql =
