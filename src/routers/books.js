@@ -1,6 +1,5 @@
 import { Router } from "express";
 import {
-  addBook,
   getAllBookAndByCategory,
   getIndividualBook,
 } from "../controllers/booksController.js";
@@ -12,9 +11,7 @@ const router = Router();
 router.get("/", getAllBookAndByCategory);
 
 // 개별 도서 조회
-router.get("/:id", verifyToken, getIndividualBook);
-
-// 개별 도서 추가
-router.post("/", addBook);
+// router.get("/:id", verifyToken, getIndividualBook);
+router.get("/:id", getIndividualBook);
 
 export default router;
